@@ -18,6 +18,9 @@
     table { width: 100%; border-collapse: collapse; margin: 8px 0; background: #fff; }
     th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
     .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin: 12px 0; }
+    fieldset { display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ddd; border-radius: 8px; background: #fff; margin: 12px 0 0; }
+    fieldset legend { font-size: 13px; padding: 0 4px; }
+    fieldset input { width: 4.5em; }
     .week { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
     .day { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px; }
     .day h3 { margin: 0 0 6px; font-size: 15px; display: flex; justify-content: space-between; }
@@ -47,8 +50,11 @@
     <tbody></tbody>
   </table>
 
+  <fieldset id="capacity">
+    <legend>Max study hours each day (0 = day off)</legend>
+  </fieldset>
+
   <div class="controls">
-    <label>Max study hours per day <input id="capacity" type="number" min="0.5" max="24" step="0.5" value="4" /></label>
     <button id="generate">Generate plan</button>
     <button id="sample" type="button">Load sample week</button>
     <button id="clear" type="button">Clear all</button>

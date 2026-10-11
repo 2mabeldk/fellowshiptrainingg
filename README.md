@@ -12,6 +12,6 @@ core flow: open link -> enter weekly tasks -> enter deadline for each task -> es
 No dependencies or build step. Open `index.html` in a browser, or serve the folder (`npx http-server .`).
 Click **Load sample week** for mock data, then **Generate plan**.
 
-- `scheduler.js`: planning logic. Earliest deadline first; each task's hours go in 0.5h blocks onto the least-loaded day from Mon through its due day (due = end of day), never above the daily max. Hours that don't fit are shown as a warning.
+- `scheduler.js`: planning logic. Earliest deadline first; each task's hours go in 0.5h blocks onto the day (Mon through its due day, due = end of day) that is least full relative to that day's own max study hours. Each weekday has its own max (0 = day off), never exceeded. Hours that don't fit are shown as a warning.
 - `app.js`: form, mock data, rendering.
 - Tests: `node --test test/scheduler.test.js`

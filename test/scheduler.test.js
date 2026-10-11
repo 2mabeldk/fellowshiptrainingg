@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert");
-const { validateTask, buildPlan } = require("../scheduler.js");
+const { validateTask, validateCapacity, buildPlan } = require("../scheduler.js");
 
 const hoursFor = (plan, name, upToDay = 6) =>
   plan.days.slice(0, upToDay + 1).flatMap((d) => d.items).filter((i) => i.name === name).reduce((s, i) => s + i.hours, 0);
@@ -53,4 +53,33 @@ test("validation rejects bad input", () => {
   assert.match(validateTask({ name: "x", deadline: 0, hours: 1.3 }), /0.5/);
   assert.match(validateTask({ name: "x", deadline: 0, hours: 41 }), /40/);
   assert.strictEqual(validateTask({ name: "x", deadline: 6, hours: 2.5 }), null);
+});
+
+test("each day respects its own limit, and days off get nothing", () => {
+  const caps = [2, 0, 6, 1, 4, 0, 3];
+  const plan = buildPlan([{ name: "Big", deadline: 6, hours: 16 }], caps);
+  assert.deepStrictEqual(plan.unscheduled, []);
+  plan.days.forEach((d, i) => assert.ok(d.total <= caps[i], `${d.day} ${d.total}h > ${caps[i]}h`));
+  assert.strictEqual(plan.days[1].total, 0);
+  assert.strictEqual(plan.days[5].total, 0);
+});
+
+test("days with more hours take proportionally more work", () => {
+  const plan = buildPlan([{ name: "Essay", deadline: 1, hours: 3.5 }], [1, 6]);
+  assert.deepStrictEqual(plan.days.slice(0, 2).map((d) => d.total), [0.5, 3]);
+});
+
+test("a day off before a deadline can make a task not fit", () => {
+  const plan = buildPlan([{ name: "Lab", deadline: 1, hours: 3 }], [2, 0, 4, 4, 4, 4, 4]);
+  assert.deepStrictEqual(plan.unscheduled, [{ name: "Lab", hours: 1, deadline: 1 }]);
+});
+
+test("validateCapacity", () => {
+  assert.strictEqual(validateCapacity([4, 4, 4, 4, 4, 0, 0]), null);
+  assert.match(validateCapacity([4, 4, 4, 4, 4, 4]), /all 7/);
+  assert.match(validateCapacity([4, NaN, 4, 4, 4, 4, 4]), /^Tue/);
+  assert.match(validateCapacity([4, 4, -1, 4, 4, 4, 4]), /^Wed/);
+  assert.match(validateCapacity([4, 4, 4, 25, 4, 4, 4]), /^Thu/);
+  assert.match(validateCapacity([4, 4, 4, 4, 1.2, 4, 4]), /^Fri/);
+  assert.match(validateCapacity([0, 0, 0, 0, 0, 0, 0]), /above 0/);
 });

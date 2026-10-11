@@ -17,9 +17,10 @@
   }
 
   // tasks: [{ name, deadline (0=Mon..6=Sun, due end of day), hours }]
-  // capacity: max study hours per day
+  // capacity: max study hours per day, either one number for every day or an array of 7 (Mon..Sun)
   // Returns { days: [{ day, total, items: [{ name, hours }] }], unscheduled: [{ name, hours, deadline }] }
   function buildPlan(tasks, capacity) {
+    const caps = Array.isArray(capacity) ? capacity : DAYS.map(() => capacity);
     const load = DAYS.map(() => 0);
     const perDay = DAYS.map(() => new Map()); // task index -> hours
     const unscheduled = [];
@@ -31,11 +32,12 @@
       const task = tasks[i];
       let remaining = Math.round(task.hours / BLOCK);
       while (remaining > 0) {
-        // Least-loaded day with room, from Monday through the deadline day (ties -> earlier day).
+        // Day with room that is least full relative to its own limit, from Monday through the
+        // deadline day (ties -> earlier day), so days with more study hours take more of the work.
         let best = -1;
         for (let d = 0; d <= task.deadline; d++) {
-          if (load[d] + BLOCK > capacity) continue;
-          if (best === -1 || load[d] < load[best]) best = d;
+          if (load[d] + BLOCK > caps[d]) continue;
+          if (best === -1 || load[d] / caps[d] < load[best] / caps[best]) best = d;
         }
         if (best === -1) break;
         load[best] += BLOCK;
@@ -55,7 +57,20 @@
     return { days, unscheduled };
   }
 
-  const api = { DAYS, validateTask, buildPlan };
+  // Returns an error message string, or null if every day's limit is valid.
+  function validateCapacity(caps) {
+    if (!Array.isArray(caps) || caps.length !== 7) return "Set study hours for all 7 days.";
+    for (let d = 0; d < 7; d++) {
+      const c = caps[d];
+      if (typeof c !== "number" || !Number.isFinite(c) || c < 0 || c > 24 || Math.round(c / BLOCK) * BLOCK !== c) {
+        return `${DAYS[d]}: study hours must be 0–24 in 0.5 hour steps.`;
+      }
+    }
+    if (caps.every((c) => c === 0)) return "At least one day needs study hours above 0.";
+    return null;
+  }
+
+  const api = { DAYS, validateTask, validateCapacity, buildPlan };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Scheduler = api;
 })(this);

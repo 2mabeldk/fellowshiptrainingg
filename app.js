@@ -1,4 +1,4 @@
-const { DAYS, validateTask, buildPlan } = window.Scheduler;
+const { DAYS, validateTask, validateCapacity, buildPlan } = window.Scheduler;
 
 // Mock data for a typical student week.
 const SAMPLE_TASKS = [
@@ -16,7 +16,21 @@ const $ = (id) => document.getElementById(id);
 const errorEl = $("error");
 const planEl = $("plan");
 
-DAYS.forEach((d, i) => $("deadline").insertAdjacentHTML("beforeend", `<option value="${i}">${d}</option>`));
+const DEFAULT_DAILY_HOURS = 4;
+
+DAYS.forEach((d, i) => {
+  $("deadline").insertAdjacentHTML("beforeend", `<option value="${i}">${d}</option>`);
+  $("capacity").insertAdjacentHTML(
+    "beforeend",
+    `<label>${d} <input id="cap-${i}" type="number" min="0" max="24" step="0.5" value="${DEFAULT_DAILY_HOURS}" /></label>`
+  );
+});
+
+const readCapacity = () =>
+  DAYS.map((d, i) => {
+    const raw = $(`cap-${i}`).value;
+    return raw === "" ? NaN : Number(raw);
+  });
 
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -66,9 +80,10 @@ $("generate").addEventListener("click", () => {
     planEl.innerHTML = "";
     return;
   }
-  const capacity = Number($("capacity").value);
-  if (!Number.isFinite(capacity) || capacity < 0.5 || capacity > 24) {
-    errorEl.textContent = "Max study hours per day must be between 0.5 and 24.";
+  const capacity = readCapacity();
+  const capErr = validateCapacity(capacity);
+  if (capErr) {
+    errorEl.textContent = capErr;
     planEl.innerHTML = "";
     return;
   }
@@ -92,15 +107,15 @@ function renderPlan(plan, capacity) {
   let html = "";
   if (plan.unscheduled.length) {
     html +=
-      `<div class="warn" id="overload"><strong>Not everything fits at ${capacity}h/day.</strong><ul>` +
+      `<div class="warn" id="overload"><strong>Not everything fits in the study hours you set.</strong><ul>` +
       plan.unscheduled
         .map((u) => `<li>${escapeHtml(u.name)}: ${u.hours}h left unscheduled before ${DAYS[u.deadline]}</li>`)
         .join("") +
-      `</ul>Try raising your daily hours, starting earlier, or trimming estimates.</div>`;
+      `</ul>Try adding hours on days before the deadline, or trimming estimates.</div>`;
   }
   html += `<h2>Your week</h2><div class="week">`;
-  for (const d of plan.days) {
-    html += `<div class="day" data-day="${d.day}"><h3><span>${d.day}</span><span>${d.total}h</span></h3>`;
+  plan.days.forEach((d, i) => {
+    html += `<div class="day" data-day="${d.day}"><h3><span>${d.day}</span><span>${d.total}h / ${capacity[i]}h</span></h3>`;
     html += d.items.length
       ? `<ul>${d.items
           .map(
@@ -110,8 +125,8 @@ function renderPlan(plan, capacity) {
               `</li>`
           )
           .join("")}</ul>`
-      : `<div class="empty">Free</div>`;
+      : `<div class="empty">${capacity[i] === 0 ? "Day off" : "Free"}</div>`;
     html += `</div>`;
-  }
+  });
   planEl.innerHTML = html + `</div>`;
 }
