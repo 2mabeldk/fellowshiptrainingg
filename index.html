@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weekly Study Plan</title>
+  <link rel="icon" href="data:," />
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 0 auto; padding: 16px; color: #1d1d1f; background: #fafafa; }
+    h1 { margin-bottom: 4px; }
+    .sub { color: #555; margin-top: 0; }
+    form { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+    label { display: flex; flex-direction: column; font-size: 13px; gap: 2px; }
+    input, select, button { font: inherit; padding: 6px 8px; }
+    button { cursor: pointer; }
+    .error { color: #b00020; min-height: 1.2em; margin: 6px 0; }
+    .warn { background: #fff4e5; border: 1px solid #f0b46b; padding: 8px 12px; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; background: #fff; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin: 12px 0; }
+    .week { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    .day { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px; }
+    .day h3 { margin: 0 0 6px; font-size: 15px; display: flex; justify-content: space-between; }
+    .day ul { margin: 0; padding-left: 16px; font-size: 14px; }
+    .day .empty { color: #888; font-size: 13px; }
+    .due { color: #b00020; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Weekly Study Plan</h1>
+  <p class="sub">Add this week's tasks, when each is due, and how long you think it will take.</p>
+
+  <form id="task-form" novalidate>
+    <label>Task <input id="name" placeholder="e.g. CS 61A project" /></label>
+    <label>Due (end of day)
+      <select id="deadline">
+        <option value="">Pick a day</option>
+      </select>
+    </label>
+    <label>Hours <input id="hours" type="number" min="0.5" step="0.5" placeholder="e.g. 3" /></label>
+    <button type="submit">Add task</button>
+  </form>
+  <div id="error" class="error" role="alert"></div>
+
+  <table id="task-table" hidden>
+    <thead><tr><th>Task</th><th>Due</th><th>Hours</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="controls">
+    <label>Max study hours per day <input id="capacity" type="number" min="0.5" max="24" step="0.5" value="4" /></label>
+    <button id="generate">Generate plan</button>
+    <button id="sample" type="button">Load sample week</button>
+    <button id="clear" type="button">Clear all</button>
+  </div>
+
+  <div id="plan"></div>
+
+  <script src="scheduler.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

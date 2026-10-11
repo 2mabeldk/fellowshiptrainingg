@@ -6,3 +6,12 @@ problem: struggle with creating time/planning for when to complete what assignme
 hypothesis: assignments/tasks can be organized by day (in a week) to create a weekly study plan that can be consistently and sustainably completed
 question: will creating a day-by-day study plan help more students stay organized with their tasks?
 core flow: open link -> enter weekly tasks -> enter deadline for each task -> estimate of how long task will take -> see recommendation of how tasks should be spaced out throughout week
+
+## Prototype
+
+No dependencies or build step. Open `index.html` in a browser, or serve the folder (`npx http-server .`).
+Click **Load sample week** for mock data, then **Generate plan**.
+
+- `scheduler.js`: planning logic. Earliest deadline first; each task's hours go in 0.5h blocks onto the least-loaded day from Mon through its due day (due = end of day), never above the daily max. Hours that don't fit are shown as a warning.
+- `app.js`: form, mock data, rendering.
+- Tests: `node --test test/scheduler.test.js`
